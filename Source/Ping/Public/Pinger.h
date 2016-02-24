@@ -198,11 +198,15 @@ static int test(int argc, char* argv[])
     asio::io_service io_service;
     pinger p(io_service, argv[1]);
     io_service.run();
+	return 0;
   }
   catch (std::exception& e)
   {
     std::cerr << "Exception: " << e.what() << std::endl;
+	return 2;
   }
+
+  return 0;
 }
 
   icmp::resolver resolver_;
