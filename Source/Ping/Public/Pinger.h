@@ -23,18 +23,24 @@
 
 #define BOOST_ALL_NO_LIB
 
+#if PLATFORM_WINDOWS
 #define _WIN32_WINNT 0x0501
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
+#endif
 // end
 
 // begin
 // see https://answers.unrealengine.com/questions/38930/cannot-open-include-files.html?sort=oldest
+#if PLATFORM_WINDOWS
 #include "AllowWindowsPlatformTypes.h"
+#endif
 #include <asio.hpp>
 #include <istream>
 #include <iostream>
 #include <ostream>
+#if PLATFORM_WINDOWS
 #include "HideWindowsPlatformTypes.h"
+#endif
 // end
 
 #include "icmp_header.hpp"
