@@ -27,6 +27,8 @@ public class Ping : ModuleRules
 			new string[]
 			{
 				"Core",
+                "CoreUObject",
+                "Engine",
 				"asio",
 				"Projects"
 				// ... add other public dependencies that you statically link with here ...
