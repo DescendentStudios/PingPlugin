@@ -31,6 +31,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LogPing, Log, All);
 
 #if PLATFORM_WINDOWS
 typedef class WinPingThread PingThreadType;
+#elif PLATFORM_MAC | PLATFORM_LINUX
+typedef class MaxLinuxPingThread PingThreadType;
 #endif
 
 /**
