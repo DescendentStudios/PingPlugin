@@ -76,7 +76,7 @@ std::string which_ping()
 	//thread blocks until either packet is received or the timeout goes through
 	if (rc == 0)
 	{
-		UE_LOG(LogPing, Error, TEXT("'Which' timed out.");
+		UE_LOG(LogPing, Error, TEXT("'Which' timed out."));
 		return "";
 	}
 
