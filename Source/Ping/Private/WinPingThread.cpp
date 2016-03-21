@@ -1,5 +1,5 @@
 #if PLATFORM_WINDOWS
-
+#include "PingPrivatePCH.h"
 #include "WinPingThread.h"
 #include "AllowWindowsPlatformTypes.h"
 #include <IntSafe.h>
