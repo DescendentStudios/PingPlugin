@@ -83,7 +83,7 @@ std::string which_ping()
 	int bytes_read = read(cerr_pipe[0], &buf[0], buf.length());
 	if (bytes_read > 0)
 	{
-		UE_LOG(LogPing, Error, TEXT("Got error message from 'which': %s") ANSI_TO_TCHAR(buf.substr(0, bytes_read)));
+		UE_LOG(LogPing, Error, TEXT("Got error message from 'which': %s") UTF8_TO_TCHAR(buf.substr(0, bytes_read)));
 		return "";
 	}
 
@@ -117,7 +117,7 @@ uint32 MacLinuxPingThread::Run()
 
 	if (pipe(cout_pipe) || pipe(cerr_pipe))
 	{
-		UE_LOG(LogPing, Error, TEXT("'Ping' pipe returned an error.");
+		UE_LOG(LogPing, Error, TEXT("'Ping' pipe returned an error."));
 		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
 		Stop();
 		return -1;
@@ -133,7 +133,7 @@ uint32 MacLinuxPingThread::Run()
 		return -1;
 	}
 
-	UE_LOG(LogPing, VeryVerbose, TEXT("Ping path: %s"), ANSI_TO_TCHAR(ping_path));
+	UE_LOG(LogPing, VeryVerbose, TEXT("Ping path: %s"), UTF8_TO_TCHAR(ping_path));
 
 	posix_spawn_file_actions_init(&action);
 	posix_spawn_file_actions_addclose(&action, cout_pipe[0]);
@@ -190,7 +190,7 @@ uint32 MacLinuxPingThread::Run()
 	int32 bytes_read = read(cerr_pipe[0], &buf[0], buf.length());
 	if (bytes_read > 0)
 	{
-		UE_LOG(LogPing, Error, TEXT("Got error message from 'ping': %s"), ANSI_TO_TCHAR(buf.substr(0, bytes_read)));
+		UE_LOG(LogPing, Error, TEXT("Got error message from 'ping': %s"), UTF8_TO_TCHAR(buf.substr(0, bytes_read)));
 		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
 		Stop();
 		return -1;
@@ -209,7 +209,7 @@ uint32 MacLinuxPingThread::Run()
 		return -1;
 	}
 
-	UE_LOG(LogPing, VeryVerbose, TEXT("Done reading.");
+	UE_LOG(LogPing, VeryVerbose, TEXT("Done reading."));
 
 	// dump output into FString for parsing
 	FString pingOutput = ANSI_TO_TCHAR(buf.substr(0, bytes_read));
@@ -218,9 +218,9 @@ uint32 MacLinuxPingThread::Run()
 	close(cout_pipe[0]);
 	close(cerr_pipe[0]);
 
-	UE_LOG(LogPing, VeryVerbose, TEXT("Waiting for process to close.");
+	UE_LOG(LogPing, VeryVerbose, TEXT("Waiting for process to close."));
 	waitpid(pid, &exit_code, 0);
-	UE_LOG(LogPing, VeryVerbose, TEXT("Child closed.");
+	UE_LOG(LogPing, VeryVerbose, TEXT("Child closed."));
 
 	posix_spawn_file_actions_destroy(&action);
 	
