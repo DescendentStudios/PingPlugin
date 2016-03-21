@@ -247,4 +247,9 @@ uint32 MacLinuxPingThread::Run()
 	return 0;
 }
 
+void MacLinuxPingThread::Stop()
+{
+
+}
+
 #endif
