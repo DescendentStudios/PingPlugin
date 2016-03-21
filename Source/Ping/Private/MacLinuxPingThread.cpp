@@ -84,7 +84,7 @@ std::string which_ping()
 	if (bytes_read > 0)
 	{
 		FString errorMessage(buf.substr(0, bytes_read).c_str());
-		UE_LOG(LogPing, Error, TEXT("Got error message from 'which': %s") *errorMessage);
+		UE_LOG(LogPing, Error, TEXT("Got error message from 'which': %s"), *errorMessage);
 		return "";
 	}
 
@@ -134,7 +134,7 @@ uint32 MacLinuxPingThread::Run()
 		return -1;
 	}
 
-	FString UPingPath(ping_path.c_str);
+	FString UPingPath(ping_path.c_str());
 	UE_LOG(LogPing, VeryVerbose, TEXT("Ping path: %s"), *UPingPath);
 
 	posix_spawn_file_actions_init(&action);
@@ -230,9 +230,9 @@ uint32 MacLinuxPingThread::Run()
 	int32 timePos = pingOutput.Find("time=", ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromEnd, pingOutput.Len() - 1);
 	if (timePos != -1)
 	{
-		int32 msPos = pingOutpur.Find("ms\n", ESearchCase::Type::IgnoreCase, ESeachDir::Type::FromStart, timePos);
+		int32 msPos = pingOutput.Find("ms\n", ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromStart, timePos);
 		FString timeResult = pingOutput.Mid(timePos + 5, (msPos - 1) - (timePos + 5));
-		FPlatformAtomics::InterlockedAdd(PingTime, FCString::Atoi(timeResult));
+		FPlatformAtomics::InterlockedAdd(PingTime, FCString::Atoi(*timeResult));
 	}
 	else
 	{
