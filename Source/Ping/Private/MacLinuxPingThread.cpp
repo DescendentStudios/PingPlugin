@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sstream>
 #include <sys/wait.h>
 
 bool MacLinuxPingThread::Init()
