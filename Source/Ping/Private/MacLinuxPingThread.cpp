@@ -83,7 +83,8 @@ std::string which_ping()
 	int bytes_read = read(cerr_pipe[0], &buf[0], buf.length());
 	if (bytes_read > 0)
 	{
-		UE_LOG(LogPing, Error, TEXT("Got error message from 'which': %s") UTF8_TO_TCHAR(buf.substr(0, bytes_read)));
+		FString errorMessage(buf.substr(0, bytes_read).c_str());
+		UE_LOG(LogPing, Error, TEXT("Got error message from 'which': %s") *errorMessage);
 		return "";
 	}
 
@@ -133,7 +134,8 @@ uint32 MacLinuxPingThread::Run()
 		return -1;
 	}
 
-	UE_LOG(LogPing, VeryVerbose, TEXT("Ping path: %s"), UTF8_TO_TCHAR(ping_path));
+	FString UPingPath(ping_path.c_str);
+	UE_LOG(LogPing, VeryVerbose, TEXT("Ping path: %s"), *UPingPath);
 
 	posix_spawn_file_actions_init(&action);
 	posix_spawn_file_actions_addclose(&action, cout_pipe[0]);
@@ -190,7 +192,8 @@ uint32 MacLinuxPingThread::Run()
 	int32 bytes_read = read(cerr_pipe[0], &buf[0], buf.length());
 	if (bytes_read > 0)
 	{
-		UE_LOG(LogPing, Error, TEXT("Got error message from 'ping': %s"), UTF8_TO_TCHAR(buf.substr(0, bytes_read)));
+		FString errorMessage(buf.substr(0, bytes_read).c_str());
+		UE_LOG(LogPing, Error, TEXT("Got error message from 'ping': %s"), *errorMessage);
 		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
 		Stop();
 		return -1;
@@ -212,7 +215,7 @@ uint32 MacLinuxPingThread::Run()
 	UE_LOG(LogPing, VeryVerbose, TEXT("Done reading."));
 
 	// dump output into FString for parsing
-	FString pingOutput = ANSI_TO_TCHAR(buf.substr(0, bytes_read));
+	FString pingOutput(buf.substr(0, bytes_read).c_str());
 
 	// close our side of pipes
 	close(cout_pipe[0]);
