@@ -38,7 +38,7 @@ typedef class MacLinuxPingThread PingThreadType;
 /**
 *	Container class for ping functionality.  Acts as interface between blueprint and ASIO code
 */
-UCLASS(Blueprintable, Config = Game)
+UCLASS(Blueprintable, BlueprintType, Config = Game)
 class UPingIP : public UObject
 {
 	GENERATED_UCLASS_BODY()
@@ -48,6 +48,7 @@ private:
 	volatile int32 EchoThreadComplete; //using volatile int32 instead of bool to exploit atomic increment
 	volatile int32 EchoTimeMs;
 	FRunnableThread* PingThread;
+	PingThreadType* PingThreadObject;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Ping")

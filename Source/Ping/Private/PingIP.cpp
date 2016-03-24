@@ -13,7 +13,7 @@ void UPingIP::SendPing(FString hostname)
 {
 	TargetHost = hostname;
 
-	PingThreadType* PingThreadObject = new PingThreadType(&EchoThreadComplete, &EchoTimeMs, TargetHost);
+	PingThreadObject = new PingThreadType(&EchoThreadComplete, &EchoTimeMs, TargetHost);
 	PingThread = PingThreadObject->StartThread();
 	if (PingThread == NULL)
 	{
@@ -55,5 +55,6 @@ void UPingIP::PollThread()
 
 UPingIP::~UPingIP()
 {
-	
+	delete PingThread;
+	delete PingThreadObject;
 }

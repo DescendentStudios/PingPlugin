@@ -18,7 +18,7 @@ bool MacLinuxPingThread::Init()
 
 FRunnableThread* MacLinuxPingThread::StartThread()
 {
-	return FRunnableThread::Create(this, TEXT("MacLinuxPingThread"), true, true, 0, TPri_Normal);
+	return FRunnableThread::Create(this, TEXT("MacLinuxPingThread"), 0, TPri_Normal);
 }
 
 std::string which_ping()

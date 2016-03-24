@@ -24,7 +24,7 @@ bool WinPingThread::Init()
 
 FRunnableThread* WinPingThread::StartThread()
 {
-	return FRunnableThread::Create(this, TEXT("WinPingThread"), true, true, 0, TPri_Normal);
+	return FRunnableThread::Create(this, TEXT("WinPingThread"), 0, TPri_Normal);
 }
 
 //function that resolves hostname
