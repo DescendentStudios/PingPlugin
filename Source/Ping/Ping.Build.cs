@@ -29,7 +29,6 @@ public class Ping : ModuleRules
 				"Core",
                 "CoreUObject",
                 "Engine",
-				"asio",
 				"Projects"
 				// ... add other public dependencies that you statically link with here ...
 			}
@@ -51,9 +50,5 @@ public class Ping : ModuleRules
 			}
 			);
 
-		AddThirdPartyPrivateStaticDependencies(Target,
-				"asio"
-				// ... add any third party modules that your module depends on here ...
-				);
 	}
 }
