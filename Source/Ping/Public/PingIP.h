@@ -39,7 +39,7 @@ typedef class MacLinuxPingThread PingThreadType;
 *	Container class for ping functionality.  Acts as interface between blueprint and ping code
 */
 UCLASS(Blueprintable, BlueprintType, Config = Game)
-class UPingIP : public UObject
+class PING_API UPingIP : public UObject
 {
 	GENERATED_UCLASS_BODY()
 
