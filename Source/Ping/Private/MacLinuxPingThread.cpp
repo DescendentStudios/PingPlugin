@@ -10,6 +10,7 @@
 #include <string.h>
 #include <sstream>
 #include <sys/wait.h>
+#include <time.h>
 
 bool MacLinuxPingThread::Init()
 {
@@ -21,218 +22,178 @@ FRunnableThread* MacLinuxPingThread::StartThread()
 	return FRunnableThread::Create(this, TEXT("MacLinuxPingThread"), 0, TPri_Normal);
 }
 
-std::string which_ping()
+bool MacLinuxPingThread::RunBashCommand(FString command, int timeoutSeconds, int32* outReturnCode, FString* outStdOut, FString* outStdErr) const
 {
-	int32 exit_code;
-	int32 cout_pipe[2];
-	int32 cerr_pipe[2];
-	posix_spawn_file_actions_t action;
+    FString executableFileName = TEXT("/bin/bash");
+    FString cmdLineParams = TEXT("-l -c \"") + command + TEXT("\"");
+    int32 returnCode = -1;
+    FString defaultError;
+    if (!outStdErr)
+    {
+        outStdErr = &defaultError;
+    }
+    
+    void* pipeRead = nullptr;
+    void* pipeWrite = nullptr;
+    verify(FPlatformProcess::CreatePipe(pipeRead, pipeWrite));
+    
+    bool wasInvoked = false;
+    
+    const bool launchDetached = true;
+    const bool launchHidden = true;
+    const bool launchReallyHidden = true;
+    bool didTimeout = false;
+    
+    FProcHandle procHandle = FPlatformProcess::CreateProc(*executableFileName, *cmdLineParams, launchDetached, launchHidden, launchReallyHidden, NULL, 0, NULL, pipeWrite);
+    if (procHandle.IsValid())
+    {
+        time_t startTime = std::time(nullptr);
+        while (FPlatformProcess::IsProcRunning(procHandle))
+        {
+            if ((didTimeout = difftime(std::time(nullptr), startTime) >= timeoutSeconds))
+            {
+                UE_LOG(LogPing, Error, TEXT("'%s' timed out."), *command);
+                break;
+            }
+            
+            FString newLine = FPlatformProcess::ReadPipe(pipeRead);
+            if (newLine.Len() > 0)
+            {
+                if (outStdOut != nullptr)
+                {
+                    *outStdOut += newLine;
+                }
+            }
+            FPlatformProcess::Sleep(0.1);
+        }
+        
+        // read the remainder
+        if (!didTimeout)
+        {
+            for(;;)
+            {
+                FString newLine = FPlatformProcess::ReadPipe(pipeRead);
+                if (newLine.Len() <= 0)
+                {
+                    break;
+                }
+                
+                if (outStdOut != nullptr)
+                {
+                    *outStdOut += newLine;
+                }
+            }
+        }
+        
+        FPlatformProcess::Sleep(0.5);
+        
+        wasInvoked = true;
+        bool bGotReturnCode = FPlatformProcess::GetProcReturnCode(procHandle, &returnCode);
+        if (bGotReturnCode)
+            *outReturnCode = returnCode;
+        
+        FPlatformProcess::CloseProc(procHandle);
+    }
+    else
+    {
+        wasInvoked = false;
+        *outReturnCode = -1;
+        *outStdOut = "";
+        UE_LOG(LogPing, Error, TEXT("Failed to launch tool. (%s)"), *executableFileName);
+    }
+    FPlatformProcess::ClosePipe(pipeRead, pipeWrite);
+    return wasInvoked;
+}
 
-	// establish pipe
-	if (pipe(cout_pipe) || pipe(cerr_pipe))
+FString MacLinuxPingThread::WhichPing() const
+{
+    int32 returnCode;
+    FString stdErr;
+    FString stdOut;
+    
+    if (!RunBashCommand(TEXT("/usr/bin/which ping"), 5, &returnCode, &stdOut, &stdErr))
+    {
+        return TEXT("");
+    }
+    
+    bool validPingPath = false;
+    FString processedOutput;
+    if (stdOut.Len() > 0)
 	{
-		UE_LOG(LogPing, Error, TEXT("'Which' Pipe() returned an error."));
-		return "";
-	}
+		UE_LOG(LogPing, VeryVerbose, TEXT("Read in %d characters from 'which' cout."), stdOut.Len());
 
-	// prepare options for spawning 'which' process
-	posix_spawn_file_actions_init(&action);
-	posix_spawn_file_actions_addclose(&action, cout_pipe[0]);
-	posix_spawn_file_actions_addclose(&action, cerr_pipe[0]);
-	posix_spawn_file_actions_adddup2(&action, cout_pipe[1], 1);
-	posix_spawn_file_actions_adddup2(&action, cerr_pipe[1], 2);
+        processedOutput = stdOut;
+        processedOutput.TrimTrailing();
+        int32 lastNewline;
+        if (processedOutput.FindLastChar(TEXT('\n'), lastNewline))
+        {
+            processedOutput = processedOutput.Mid(lastNewline + 1);
+        }
 
-	posix_spawn_file_actions_addclose(&action, cout_pipe[1]);
-	posix_spawn_file_actions_addclose(&action, cerr_pipe[1]);
-
-	std::string command = "/usr/bin/which ping";
-	std::string argsmem[] = { "bash","-l","-c" }; // allows non-const access to literals
-	char * args[] = { &argsmem[0][0],&argsmem[1][0],&argsmem[2][0],&command[0],nullptr };
-
-	pid_t pid;
-	if (posix_spawnp(&pid, args[0], &action, NULL, &args[0], NULL) != 0)
-	{
-		UE_LOG(LogPing, Error, TEXT("posix_spawnp(which) failed with error: %d"), strerror(errno));
-	}
-
-	// close child-side of pipes
-	close(cout_pipe[1]);
-	close(cerr_pipe[1]);
-
-	//std::cout << "Started 'which' process, PID is " << pid << std::endl;
-
-	std::string buf(64, ' ');
-
-	struct timespec timeout = { 5, 0 };
-
-	// prepare to read from pipe
-	fd_set read_set;
-	memset(&read_set, 0, sizeof(read_set));
-	FD_SET(cout_pipe[0], &read_set);
-	FD_SET(cerr_pipe[0], &read_set);
-
-	int32 larger_fd = (cout_pipe[0] > cerr_pipe[0]) ? cout_pipe[0] : cerr_pipe[0];
-
-	int32 rc = pselect(larger_fd + 1, &read_set, NULL, NULL, &timeout, NULL);
-	//thread blocks until either packet is received or the timeout goes through
-	if (rc == 0)
-	{
-		UE_LOG(LogPing, Error, TEXT("'Which' timed out."));
-		return "";
-	}
-
-	int bytes_read = read(cerr_pipe[0], &buf[0], buf.length());
-	if (bytes_read > 0)
-	{
-		FString errorMessage(buf.substr(0, bytes_read).c_str());
-		UE_LOG(LogPing, Error, TEXT("Got error message from 'which': %s"), *errorMessage);
-		return "";
-	}
-
-	bytes_read = read(cout_pipe[0], &buf[0], buf.length());
-	if (bytes_read > 0)
-	{
-		UE_LOG(LogPing, VeryVerbose, TEXT("Read in %d bytes from 'which' cout_pipe."), bytes_read);
+        const FString pingSuffix = TEXT("/ping");
+        validPingPath = processedOutput.Len() >= pingSuffix.Len() && processedOutput.EndsWith(pingSuffix, ESearchCase::IgnoreCase);
+        if (!validPingPath)
+        {
+            UE_LOG(LogPing, Error, TEXT("Response from 'which' appears invalid: %s"), *stdOut);
+        }
 	}
 	else
 	{
-		UE_LOG(LogPing, Error, TEXT("Read nothing from 'which' cout_pipe."));
+		UE_LOG(LogPing, Error, TEXT("Read nothing from 'which' cout."));
 	}
+    
+    if (stdErr.Len() > 0)
+    {
+        UE_LOG(LogPing, Warning, TEXT("Got error message from 'which': %s"), *stdErr);
+    }
 
-	waitpid(pid, &exit_code, 0);
-
-	// close our side of pipes
-	close(cout_pipe[0]);
-	close(cerr_pipe[0]);
-
-	posix_spawn_file_actions_destroy(&action);
-
-	return buf.substr(0, bytes_read - 1); //trim off the trailing newline
+    return validPingPath ? processedOutput : TEXT("");
 }
 
 uint32 MacLinuxPingThread::Run()
 {
-	int32 exit_code;
-	int32 cout_pipe[2];
-	int32 cerr_pipe[2];
-	posix_spawn_file_actions_t action;
+//    FString pingPath = WhichPing();
+//
+//	if (pingPath.Len() == 0)
+//	{
+//		UE_LOG(LogPing, Error, TEXT("Was unable to find ping executable."));
+//		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
+//		Stop();
+//		return -1;
+//	}
+//    
+//    UE_LOG(LogPing, VeryVerbose, TEXT("Ping path: %s"), *pingPath);
 
-	if (pipe(cout_pipe) || pipe(cerr_pipe))
+    int32 returnCode;
+    FString stdErr;
+    FString stdOut;
+    
+    if (!RunBashCommand(TEXT("ping -c1 ") + Hostname, 5, &returnCode, &stdOut, &stdErr))
 	{
-		UE_LOG(LogPing, Error, TEXT("'Ping' pipe returned an error."));
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
-		return -1;
-	}
-
-	std::string ping_path = which_ping();
-
-	if (ping_path.length() == 0)
-	{
-		UE_LOG(LogPing, Error, TEXT("Was unable to find ping executable."));
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
-		return -1;
-	}
-
-	FString UPingPath(ping_path.c_str());
-	UE_LOG(LogPing, VeryVerbose, TEXT("Ping path: %s"), *UPingPath);
-
-	posix_spawn_file_actions_init(&action);
-	posix_spawn_file_actions_addclose(&action, cout_pipe[0]);
-	posix_spawn_file_actions_addclose(&action, cerr_pipe[0]);
-	posix_spawn_file_actions_adddup2(&action, cout_pipe[1], 1);
-	posix_spawn_file_actions_adddup2(&action, cerr_pipe[1], 2);
-
-	posix_spawn_file_actions_addclose(&action, cout_pipe[1]);
-	posix_spawn_file_actions_addclose(&action, cerr_pipe[1]);
-
-	std::string ping_addr = TCHAR_TO_ANSI(*Hostname);
-	std::string command = ping_path + " -c 1 " + ping_addr;
-	//std::string command = "/bin/ping -c 1 8.8.4.4";
-	std::string argsmem[] = { "bash","-l","-c" }; // allows non-const access to literals
-	char * args[] = { &argsmem[0][0],&argsmem[1][0],&argsmem[2][0],&command[0],nullptr };
-
-	//std::cout << "Ping command: " << command << std::endl;
-
-	pid_t pid;
-	if (posix_spawnp(&pid, args[0], &action, NULL, &args[0], NULL) != 0)
-	{
-		UE_LOG(LogPing, Error, TEXT("posix_spawnp(ping) failed with error: %d"), strerror(errno));
 		exit(-2);
 	}
 
-	UE_LOG(LogPing, VeryVerbose, TEXT("Ping process ID: %d"), pid);
-
-	close(cout_pipe[1]), close(cerr_pipe[1]); // close child-side of pipes
-
-	// prepare buffer for 'ping' output
-	std::string buf(512, ' ');
-	std::stringstream bufstream;
-
-	struct timespec timeout = { 5, 0 };
-
-	// prepare for reading from pipe
-	fd_set read_set;
-	memset(&read_set, 0, sizeof(read_set));
-	FD_SET(cout_pipe[0], &read_set);
-	FD_SET(cerr_pipe[0], &read_set);
-
-	int32 larger_fd = (cout_pipe[0] > cerr_pipe[0]) ? cout_pipe[0] : cerr_pipe[0];
-
-	int32 rc = pselect(larger_fd + 1, &read_set, NULL, NULL, &timeout, NULL);
-	//thread blocks until either packet is received or the timeout goes through
-	if (rc == 0)
+	if (stdOut.Len() > 0)
 	{
-		UE_LOG(LogPing, Error, TEXT("'Ping' timed out."));
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
-		return -1;
-	}
-
-	int32 bytes_read = read(cerr_pipe[0], &buf[0], buf.length());
-	if (bytes_read > 0)
-	{
-		FString errorMessage(buf.substr(0, bytes_read).c_str());
-		UE_LOG(LogPing, Error, TEXT("Got error message from 'ping': %s"), *errorMessage);
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
-		return -1;
-	}
-
-	bytes_read = read(cout_pipe[0], &buf[0], buf.length());
-	if (bytes_read > 0)
-	{
-		UE_LOG(LogPing, VeryVerbose, TEXT("Read in %d bytes from 'ping' cout_pipe."), bytes_read);
+		UE_LOG(LogPing, VeryVerbose, TEXT("Read in %d characters from 'ping' cout."), stdOut.Len());
 	}
 	else
 	{
-		UE_LOG(LogPing, Error, TEXT("Read nothing from 'ping' cout_pipe."));
+		UE_LOG(LogPing, Error, TEXT("Read nothing from 'ping' cout."));
 		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
 		Stop();
 		return -1;
 	}
 
-	UE_LOG(LogPing, VeryVerbose, TEXT("Done reading."));
-
-	// dump output into FString for parsing
-	FString pingOutput(buf.substr(0, bytes_read).c_str());
-
-	// close our side of pipes
-	close(cout_pipe[0]);
-	close(cerr_pipe[0]);
-
-	UE_LOG(LogPing, VeryVerbose, TEXT("Waiting for process to close."));
-	waitpid(pid, &exit_code, 0);
-	UE_LOG(LogPing, VeryVerbose, TEXT("Child closed."));
-
-	posix_spawn_file_actions_destroy(&action);
-	
-	int32 timePos = pingOutput.Find("time=", ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromEnd, pingOutput.Len() - 1);
+    const FString timeString = TEXT("time=");
+	int32 timePos = stdOut.Find(timeString, ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromEnd, stdOut.Len() - 1);
+    bool validResponse = false;
 	if (timePos != -1)
 	{
-		int32 msPos = pingOutput.Find("ms\n", ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromStart, timePos);
-		FString timeResult = pingOutput.Mid(timePos + 5, (msPos - 1) - (timePos + 5));
+        const FString msString = TEXT("ms\n");
+		int32 msPos = stdOut.Find(msString, ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromStart, timePos);
+        validResponse = msPos != -1 && msPos > timePos + 1;
+		FString timeResult = stdOut.Mid(timePos + timeString.Len(), (msPos - 1) - (timePos + timeString.Len()));
 		FPlatformAtomics::InterlockedAdd(PingTime, FCString::Atoi(*timeResult));
 	}
 	else
@@ -240,11 +201,22 @@ uint32 MacLinuxPingThread::Run()
 		UE_LOG(LogPing, VeryVerbose, TEXT("No response from target host."));
 		FPlatformAtomics::InterlockedAdd(PingTime, -1);
 	}
+    
+    if (stdErr.Len() > 0)
+    {
+        UE_LOG(LogPing, Warning, TEXT("Got error message from 'ping': %s"), *stdErr);
+        FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
+        Stop();
+        if (!validResponse)
+        {
+            return -1;
+        }
+    }
 	
 	FPlatformAtomics::InterlockedIncrement(ThreadComplete);
 
 	Stop();
-	return 0;
+    return validResponse ? 0 : -1;
 }
 
 void MacLinuxPingThread::Stop()
