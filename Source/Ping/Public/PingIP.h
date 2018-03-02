@@ -7,20 +7,10 @@
 #include "WinPingThread.h"
 #elif PLATFORM_MAC | PLATFORM_LINUX
 #include "MacLinuxPingThread.h"
+#else
+#error "Platform is not supported"
 #endif
 
-// begin
-// see https://answers.unrealengine.com/questions/38930/cannot-open-include-files.html?sort=oldest
-#if PLATFORM_WINDOWS
-#include "AllowWindowsPlatformTypes.h"
-#endif
-#include <istream>
-#include <iostream>
-#include <ostream>
-#if PLATFORM_WINDOWS
-#include "HideWindowsPlatformTypes.h"
-#endif
-// end"
 
 #include "PingIP.generated.h"
 
