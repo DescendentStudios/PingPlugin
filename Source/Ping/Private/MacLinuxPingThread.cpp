@@ -4,6 +4,7 @@
 #if PLATFORM_MAC | PLATFORM_LINUX
 
 #include "MacLinuxPingThread.h"
+#include "Misc/ScopeExit.h"
 #include <spawn.h> // see manpages-posix-dev
 #include <poll.h>
 #include <stdio.h>
@@ -114,6 +115,15 @@ std::string which_ping()
 
 uint32 MacLinuxPingThread::Run()
 {
+	bool bSucceed = false;
+	int32 PingTime = -1;
+
+	// Ensures we tell the main thread what we found here.
+	ON_SCOPE_EXIT
+	{
+		ReturnResultToGameThread(bSucceed, PingTime);
+	};
+
 	int32 exit_code;
 	int32 cout_pipe[2];
 	int32 cerr_pipe[2];
@@ -122,8 +132,6 @@ uint32 MacLinuxPingThread::Run()
 	if (pipe(cout_pipe) || pipe(cerr_pipe))
 	{
 		UE_LOG(LogPing, Error, TEXT("'Ping' pipe returned an error."));
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
 		return -1;
 	}
 
@@ -132,8 +140,6 @@ uint32 MacLinuxPingThread::Run()
 	if (ping_path.length() == 0)
 	{
 		UE_LOG(LogPing, Error, TEXT("Was unable to find ping executable."));
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
 		return -1;
 	}
 
@@ -187,8 +193,6 @@ uint32 MacLinuxPingThread::Run()
 	if (rc == 0)
 	{
 		UE_LOG(LogPing, Error, TEXT("'Ping' timed out."));
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
 		return -1;
 	}
 
@@ -197,8 +201,6 @@ uint32 MacLinuxPingThread::Run()
 	{
 		FString errorMessage(buf.substr(0, bytes_read).c_str());
 		UE_LOG(LogPing, Error, TEXT("Got error message from 'ping': %s"), *errorMessage);
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
 		return -1;
 	}
 
@@ -210,8 +212,6 @@ uint32 MacLinuxPingThread::Run()
 	else
 	{
 		UE_LOG(LogPing, Error, TEXT("Read nothing from 'ping' cout_pipe."));
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
 		return -1;
 	}
 
@@ -235,17 +235,15 @@ uint32 MacLinuxPingThread::Run()
 	{
 		int32 msPos = pingOutput.Find("ms\n", ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromStart, timePos);
 		FString timeResult = pingOutput.Mid(timePos + 5, (msPos - 1) - (timePos + 5));
-		FPlatformAtomics::InterlockedAdd(PingTime, FCString::Atoi(*timeResult));
+		ensure(timeResult.IsNumeric());
+		PingTime = FCString::Atoi(*timeResult);
+		bSucceed = true;
 	}
 	else
 	{
 		UE_LOG(LogPing, VeryVerbose, TEXT("No response from target host."));
-		FPlatformAtomics::InterlockedAdd(PingTime, -1);
 	}
 	
-	FPlatformAtomics::InterlockedIncrement(ThreadComplete);
-
-	Stop();
 	return 0;
 }
 

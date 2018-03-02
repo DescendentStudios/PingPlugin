@@ -20,7 +20,7 @@ Ping will need to be built before it can be used.  Your UE4 editor *should* dete
 
 Pinging a host is easy.  Create a PingIP object, then bind events to OnPingComplete and OnPingFailure.  Then Call SendPing() on your host, either by hostname or IPv4 address (IPv6 is not currently supported, since UE4 does server join over IPv4).
 
-After that, start the polling.  The recommended method is to set a timer to run every 0.05 seconds whose linked event calls PollThread() on the PingIP object.  If the ping thread has completed, the event bound to OnPingComplete or OnPingFailure will be called, depending on whether an echo was received.
+That's it!  When the ping thread has completed, the event bound to OnPingComplete or OnPingFailure will be called, depending on whether an echo was received.
 
 It is important to note that to run simultaneous pings, different PingIP objects will need to created.  For example, in Descent: Underground, each match listing in the match browser has its own PingIP object.
 

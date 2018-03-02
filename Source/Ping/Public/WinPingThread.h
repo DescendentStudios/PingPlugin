@@ -1,18 +1,20 @@
 #pragma once
+
+#include "HAL/Platform.h"
+
 #if PLATFORM_WINDOWS
-#include "Object.h"
-#include "Engine.h"
+
 #include "IPingThread.h"
 
 class WinPingThread : public IPingThread
 {
 public:
-	WinPingThread(volatile int32* completeFlag, volatile int32* time, FString host) : IPingThread(completeFlag, time, host) {};
+	WinPingThread(FString const & host, UPingIP * pingOp) : IPingThread(host, pingOp) {}
 
 	// FRunnable interface
-	virtual bool Init();
-	virtual uint32 Run();
-	virtual void Stop();
+	virtual bool Init() override;
+	virtual uint32 Run() override;
+	virtual void Stop() override;
 
 	virtual FRunnableThread* StartThread();
 };

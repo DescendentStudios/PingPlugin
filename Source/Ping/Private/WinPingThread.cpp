@@ -10,6 +10,7 @@
 #include <iphlpapi.h>
 #include <icmpapi.h>
 #include "HideWindowsPlatformTypes.h"
+#include "Misc/ScopeExit.h"
 
 //DEFINE_LOG_CATEGORY(LogPing);
 
@@ -137,7 +138,7 @@ bool pingIPv6(struct sockaddr_in6 ipAddress)
 */
 
 //function that pings via IPv4
-bool pingIPv4(struct sockaddr_in ipAddress, volatile int32* pingTime)
+bool pingIPv4(struct sockaddr_in ipAddress, int32& pingTime)
 {
 	char ipAddrBuf[16];
 	size_t ipAddrBufLen = 16;
@@ -169,7 +170,7 @@ bool pingIPv4(struct sockaddr_in ipAddress, volatile int32* pingTime)
 		NULL, ReplyBuffer, ReplySize, 3000);
 	if (dwRetVal != 0) {
 		PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY)ReplyBuffer;
-		FPlatformAtomics::InterlockedAdd(pingTime, pEchoReply->RoundTripTime);
+		pingTime = pEchoReply->RoundTripTime;
 		return true;
 	}
 	return false;
@@ -177,6 +178,16 @@ bool pingIPv4(struct sockaddr_in ipAddress, volatile int32* pingTime)
 
 uint32 WinPingThread::Run()
 {
+	bool bSucceed = false;
+	int32 PingTime = -1;
+
+	// Ensures we tell the main thread what we found here.
+	ON_SCOPE_EXIT
+	{
+		ReturnResultToGameThread(bSucceed, PingTime);
+	};
+
+
 	union sockaddr_both ipAddress;
 	bool ipv6;
 
@@ -184,8 +195,6 @@ uint32 WinPingThread::Run()
 
 	if (!hostnameResolve(Hostname, ipAddress, ipv6))
 	{
-		FPlatformAtomics::InterlockedAdd(ThreadComplete, -1);
-		Stop();
 		return -1;
 	}
 
@@ -206,14 +215,11 @@ uint32 WinPingThread::Run()
 		if (pingIPv4(ipAddress.addr4, PingTime))
 		{
 			UE_LOG(LogPing, VeryVerbose, TEXT("Ping complete.  Ping time was %d ms."), PingTime);
-			FPlatformAtomics::InterlockedIncrement(ThreadComplete);
-			Stop();
+			bSucceed = true;
 		}
 		else
 		{
 			UE_LOG(LogPing, Error, TEXT("Failed to reach host."));
-			FPlatformAtomics::InterlockedIncrement(ThreadComplete);
-			Stop();
 		}
 	}
 

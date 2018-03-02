@@ -1,24 +1,30 @@
 #pragma once
 
-#include "Object.h"
-#include "Engine.h"
+#include "HAL/Runnable.h"
+#include "Async/TaskGraphInterfaces.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 #include "PingIP.h"
+
+
+class UPingIP;
+
+DECLARE_STATS_GROUP(TEXT("PingPlugin"), STATGROUP_PingPlugin, STATCAT_Advanced);
+
 
 class IPingThread : public FRunnable
 {
 protected:
-	volatile int32* ThreadComplete;
-	volatile int32* PingTime;
-	FString Hostname;
+	FString const Hostname;
+private:
+	TWeakObjectPtr<UPingIP> PingOperation; // Only access from Game Thread.
 
 public:
-	IPingThread() { ThreadComplete = NULL; PingTime = NULL; Hostname = ""; };
-	IPingThread(volatile int32* completeFlag, volatile int32* time, FString host) : ThreadComplete(completeFlag), PingTime(time), Hostname(host) {};
-
-	// FRunnable interface
-	virtual bool Init() = 0;
-	virtual uint32 Run() = 0;
-	virtual void Stop() = 0;
+	IPingThread() : Hostname(), PingOperation(nullptr) {}
+	IPingThread(FString const & host, UPingIP * pingOp) : Hostname(host), PingOperation(pingOp) {}
 
 	virtual FRunnableThread* StartThread() = 0;
+
+protected:
+	// Safe to call from any thread.
+	void ReturnResultToGameThread (bool bSuccess, int32 TimeMS = -1);
 };
