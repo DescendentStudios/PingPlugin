@@ -1,5 +1,7 @@
-#if PLATFORM_WINDOWS
 #include "PingPrivatePCH.h"
+#include "HAL/Platform.h"
+
+#if PLATFORM_WINDOWS
 #include "WinPingThread.h"
 #include "AllowWindowsPlatformTypes.h"
 #include <IntSafe.h>
