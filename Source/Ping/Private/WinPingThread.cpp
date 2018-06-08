@@ -64,7 +64,7 @@ bool hostnameResolve(FString host, union sockaddr_both& ipAddress, bool& ipv6)
 	int hostRetVal = getaddrinfo(TCHAR_TO_ANSI(*host), NULL, &netInfo, &result);
 	if (hostRetVal != 0) 
 	{
-		UE_LOG(LogPing, Error, TEXT("Hostname resolution failed: %d"), hostRetVal);
+		UE_LOG(LogPing, Error, TEXT("Hostname resolution failed: %d for %s"), hostRetVal, *host);
 		return false;
 	}
 
@@ -214,12 +214,12 @@ uint32 WinPingThread::Run()
 	{
 		if (pingIPv4(ipAddress.addr4, PingTime))
 		{
-			UE_LOG(LogPing, VeryVerbose, TEXT("Ping complete.  Ping time was %d ms."), PingTime);
+			UE_LOG(LogPing, VeryVerbose, TEXT("Ping to %s complete.  Ping time was %d ms."), *Hostname, PingTime);
 			bSucceed = true;
 		}
 		else
 		{
-			UE_LOG(LogPing, Error, TEXT("Failed to reach host."));
+			UE_LOG(LogPing, Error, TEXT("Failed to reach host: %s"), *Hostname);
 		}
 	}
 
