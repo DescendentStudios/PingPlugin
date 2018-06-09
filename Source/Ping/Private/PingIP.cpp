@@ -1,19 +1,33 @@
 #include "PingPrivatePCH.h"
+#include "HAL/Platform.h"
 #include "PingIP.h"
+
+#if PLATFORM_WINDOWS
+#include "WinPingThread.h"
+#elif PLATFORM_MAC | PLATFORM_LINUX
+#include "MacLinuxPingThread.h"
+#else
+#error "Platform is not supported"
+#endif
+
+
+#if PLATFORM_WINDOWS
+typedef WinPingThread PingThreadType;
+#elif PLATFORM_MAC | PLATFORM_LINUX
+typedef MacLinuxPingThread PingThreadType;
+#endif
 
 DEFINE_LOG_CATEGORY(LogPing);
 
 UPingIP::UPingIP(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	EchoThreadComplete = 0;
-	EchoTimeMs = 0;
 }
 
 void UPingIP::SendPing(FString hostname)
 {
 	TargetHost = hostname;
 
-	PingThreadObject = new PingThreadType(&EchoThreadComplete, &EchoTimeMs, TargetHost);
+	PingThreadObject = new PingThreadType(TargetHost, this);
 	PingThread = PingThreadObject->StartThread();
 	if (PingThread == NULL)
 	{
@@ -24,6 +38,10 @@ void UPingIP::SendPing(FString hostname)
 
 void UPingIP::ProcessEcho(int32 time, bool success)
 {
+	check(IsInGameThread());
+
+	EchoTimeMs = time;
+
 	if (success)
 	{
 		UE_LOG(LogPing, VeryVerbose, TEXT("Ping successful."));
@@ -33,23 +51,6 @@ void UPingIP::ProcessEcho(int32 time, bool success)
 	{
 		UE_LOG(LogPing, VeryVerbose, TEXT("Ping failed."));
 		OnPingFailure.Broadcast(this, TargetHost);
-	}
-}
-
-void UPingIP::PollThread()
-{
-	//UE_LOG(LogPing, VeryVerbose, TEXT("Polling."));
-	if (EchoThreadComplete)
-	{
-		if (EchoThreadComplete == 1)
-		{
-			ProcessEcho(EchoTimeMs, true);
-		}
-		else
-		{
-			ProcessEcho(-1, false);
-		}
-		EchoThreadComplete = 0;
 	}
 }
 

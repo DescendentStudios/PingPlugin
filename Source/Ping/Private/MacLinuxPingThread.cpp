@@ -1,7 +1,10 @@
+#include "PingPrivatePCH.h"
+#include "HAL/Platform.h"
+
 #if PLATFORM_MAC | PLATFORM_LINUX
 
-#include "PingPrivatePCH.h"
 #include "MacLinuxPingThread.h"
+#include "Misc/ScopeExit.h"
 #include <spawn.h> // see manpages-posix-dev
 #include <poll.h>
 #include <stdio.h>
@@ -190,16 +193,15 @@ uint32 MacLinuxPingThread::Run()
     bool validResponse = false;
 	if (timePos != -1)
 	{
-        const FString msString = TEXT("ms\n");
+    const FString msString = TEXT("ms\n");
 		int32 msPos = stdOut.Find(msString, ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromStart, timePos);
-        validResponse = msPos != -1 && msPos > timePos + 1;
+    validResponse = msPos != -1 && msPos > timePos + 1;
 		FString timeResult = stdOut.Mid(timePos + timeString.Len(), (msPos - 1) - (timePos + timeString.Len()));
 		FPlatformAtomics::InterlockedAdd(PingTime, FCString::Atoi(*timeResult));
 	}
 	else
 	{
 		UE_LOG(LogPing, VeryVerbose, TEXT("No response from target host."));
-		FPlatformAtomics::InterlockedAdd(PingTime, -1);
 	}
     
     if (stdErr.Len() > 0)
@@ -216,7 +218,7 @@ uint32 MacLinuxPingThread::Run()
 	FPlatformAtomics::InterlockedIncrement(ThreadComplete);
 
 	Stop();
-    return validResponse ? 0 : -1;
+  return validResponse ? 0 : -1;
 }
 
 void MacLinuxPingThread::Stop()
