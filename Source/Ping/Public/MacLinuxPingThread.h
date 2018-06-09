@@ -8,6 +8,10 @@
 
 class MacLinuxPingThread : public IPingThread
 {
+private:
+    bool RunBashCommand(FString command, int timeoutSeconds, int32* outReturnCode, FString* outStdOut, FString* outStdErr) const;
+    FString WhichPing() const;
+    
 public:
 	MacLinuxPingThread(FString const & host, UPingIP * pingOp) : IPingThread(host, pingOp) {}
 
