@@ -4,7 +4,7 @@ using UnrealBuildTool;
 
 public class Ping : ModuleRules
 {
-	public Ping(TargetInfo Target)
+	public Ping(ReadOnlyTargetRules Target) : base(Target)
 	{
 		
 		PublicIncludePaths.AddRange(
