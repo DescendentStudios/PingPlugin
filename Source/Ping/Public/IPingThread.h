@@ -14,6 +14,8 @@ DECLARE_STATS_GROUP(TEXT("PingPlugin"), STATGROUP_PingPlugin, STATCAT_Advanced);
 class IPingThread : public FRunnable
 {
 protected:
+	volatile int32* ThreadComplete;
+	volatile int32* PingTime;
 	FString const Hostname;
 private:
 	TWeakObjectPtr<UPingIP> PingOperation; // Only access from Game Thread.
