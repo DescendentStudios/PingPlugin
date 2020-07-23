@@ -126,7 +126,7 @@ FString MacLinuxPingThread::WhichPing() const
 		UE_LOG(LogPing, VeryVerbose, TEXT("Read in %d characters from 'which' cout."), stdOut.Len());
 
         processedOutput = stdOut;
-        processedOutput.TrimTrailing();
+        processedOutput = processedOutput.TrimEnd();
         int32 lastNewline;
         if (processedOutput.FindLastChar(TEXT('\n'), lastNewline))
         {
@@ -155,6 +155,9 @@ FString MacLinuxPingThread::WhichPing() const
 
 uint32 MacLinuxPingThread::Run()
 {
+    int32* PingTime = -1;
+    int32* ThreadComplete;
+    
 //    FString pingPath = WhichPing();
 //
 //	if (pingPath.Len() == 0)
