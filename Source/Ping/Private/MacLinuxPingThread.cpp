@@ -155,8 +155,8 @@ FString MacLinuxPingThread::WhichPing() const
 
 uint32 MacLinuxPingThread::Run()
 {
-    int32* PingTime = -1;
-    int32* ThreadComplete;
+    int32* PingTime = new int32(-1);
+    int32* ThreadComplete = new int32;
     
 //    FString pingPath = WhichPing();
 //
