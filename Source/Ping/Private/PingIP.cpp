@@ -1,4 +1,4 @@
-#include "PingPrivatePCH.h"
+#include "Ping.h"
 #include "HAL/Platform.h"
 #include "PingIP.h"
 

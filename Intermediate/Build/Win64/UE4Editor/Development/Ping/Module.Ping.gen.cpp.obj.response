@@ -32,10 +32,10 @@
 /wd4244
 /wd4838
 /I .
-/I "E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Source\Ping\Private"
-/I "E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Intermediate\Build\Win64\UE4Editor\Inc\Ping"
-/I "E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Source"
-/I "E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Source\Ping\Public"
+/I "E:\git hub\WAR_DEFI\Plugins\PingPlugin\Source\Ping\Private"
+/I "E:\git hub\WAR_DEFI\Plugins\PingPlugin\Intermediate\Build\Win64\UE4Editor\Inc\Ping"
+/I "E:\git hub\WAR_DEFI\Plugins\PingPlugin\Source"
+/I "E:\git hub\WAR_DEFI\Plugins\PingPlugin\Source\Ping\Public"
 /I Runtime
 /I Runtime\TraceLog\Public
 /I Runtime\Core\Public
@@ -263,11 +263,12 @@
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.18362.0\shared"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.18362.0\um"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.18362.0\winrt"
-/FI"E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Intermediate\Build\Win64\UE4Editor\Development\Ping\PCH.Ping.h"
-/Yu"E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Intermediate\Build\Win64\UE4Editor\Development\Ping\PCH.Ping.h"
-/Fp"E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Intermediate\Build\Win64\UE4Editor\Development\Ping\PCH.Ping.h.pch"
-"E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Intermediate\Build\Win64\UE4Editor\Development\Ping\Module.Ping.gen.cpp"
-/Fo"E:\git hub\WAR_DEFI\Plugins\PingPlugin-master\Intermediate\Build\Win64\UE4Editor\Development\Ping\Module.Ping.gen.cpp.obj"
+/FI"C:\EPIC GAMES\UnrealEngine-4.25.4-release\Engine\Intermediate\Build\Win64\UE4Editor\Development\Engine\SharedPCH.Engine.ShadowErrors.h"
+/Yu"C:\EPIC GAMES\UnrealEngine-4.25.4-release\Engine\Intermediate\Build\Win64\UE4Editor\Development\Engine\SharedPCH.Engine.ShadowErrors.h"
+/Fp"C:\EPIC GAMES\UnrealEngine-4.25.4-release\Engine\Intermediate\Build\Win64\UE4Editor\Development\Engine\SharedPCH.Engine.ShadowErrors.h.pch"
+"E:\git hub\WAR_DEFI\Plugins\PingPlugin\Intermediate\Build\Win64\UE4Editor\Development\Ping\Module.Ping.gen.cpp"
+/FI"E:\git hub\WAR_DEFI\Plugins\PingPlugin\Intermediate\Build\Win64\UE4Editor\Development\Ping\Definitions.Ping.h"
+/Fo"E:\git hub\WAR_DEFI\Plugins\PingPlugin\Intermediate\Build\Win64\UE4Editor\Development\Ping\Module.Ping.gen.cpp.obj"
 /TP
 /GR-
 /W4
