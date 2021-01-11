@@ -9,6 +9,7 @@ public class Ping : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		bEnforceIWYU = true;
 		bLegacyPublicIncludePaths = false;
+		PrecompileForTargets = PrecompileTargetsType.Any;
 
 		PublicIncludePaths.AddRange(
 			new string[] {
