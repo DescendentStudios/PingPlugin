@@ -6,8 +6,10 @@ public class Ping : ModuleRules
 {
 	public Ping(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PrivatePCHHeaderFile = "Private/PingPrivatePCH.h";
-        
+		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		bEnforceIWYU = true;
+		bLegacyPublicIncludePaths = false;
+
 		PublicIncludePaths.AddRange(
 			new string[] {
 				"Ping/Public"
