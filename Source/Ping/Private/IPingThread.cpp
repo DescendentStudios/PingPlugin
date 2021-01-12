@@ -1,8 +1,9 @@
-#include "PingPrivatePCH.h"
+
 #include "IPingThread.h"
 #include "PingIP.h"
 #include "UObject/UObjectThreadContext.h"
 #include "CoreGlobals.h"
+#include "Ping.h"
 
 DECLARE_CYCLE_STAT(TEXT("PingPlugin - ProcessEcho"),		STAT_PingPluginProcessEcho,			STATGROUP_PingPlugin);
 DECLARE_CYCLE_STAT(TEXT("PingPlugin - ProcessEcho Delay"),	STAT_PingPluginProcessEchoDelay,	STATGROUP_PingPlugin);

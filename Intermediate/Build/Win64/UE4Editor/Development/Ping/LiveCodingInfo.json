@@ -1,0 +1,16 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.Ping.cpp.obj": [
+			"IPingThread.cpp.obj",
+			"MacLinuxPingThread.cpp.obj",
+			"Ping.cpp.obj",
+			"PingIP.cpp.obj",
+			"WinPingThread.cpp.obj"
+		],
+		"Module.Ping.gen.cpp.obj": [
+			"Ping.init.gen.cpp.obj",
+			"PingIP.gen.cpp.obj"
+		]
+	}
+}

@@ -1,10 +1,10 @@
-#include "PingPrivatePCH.h"
+#include "Ping.h"
 #include "HAL/Platform.h"
 #include "PingIP.h"
 
 #if PLATFORM_WINDOWS
 #include "WinPingThread.h"
-#elif PLATFORM_MAC | PLATFORM_LINUX
+#elif PLATFORM_MAC | PLATFORM_LINUX| PLATFORM_ANDROID
 #include "MacLinuxPingThread.h"
 #else
 #error "Platform is not supported"
