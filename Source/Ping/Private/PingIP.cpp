@@ -4,7 +4,7 @@
 
 #if PLATFORM_WINDOWS
 #include "WinPingThread.h"
-#elif PLATFORM_MAC | PLATFORM_LINUX
+#elif PLATFORM_MAC | PLATFORM_LINUX| PLATFORM_ANDROID
 #include "MacLinuxPingThread.h"
 #else
 #error "Platform is not supported"
