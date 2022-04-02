@@ -1,5 +1,6 @@
-#include "PingPrivatePCH.h"
+
 #include "IPingThread.h"
+#include "PingPrivatePCH.h"
 #include "PingIP.h"
 #include "UObject/UObjectThreadContext.h"
 #include "CoreGlobals.h"

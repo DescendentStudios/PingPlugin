@@ -1,15 +1,15 @@
-#include "PingPrivatePCH.h"
-#include "HAL/Platform.h"
 
 #if PLATFORM_WINDOWS
 #include "WinPingThread.h"
-#include "AllowWindowsPlatformTypes.h"
+#include "PingPrivatePCH.h"
+#include "HAL/Platform.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
 #include <IntSafe.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include <icmpapi.h>
-#include "HideWindowsPlatformTypes.h"
+#include "Windows/HideWindowsPlatformTypes.h"
 #include "Misc/ScopeExit.h"
 
 //DEFINE_LOG_CATEGORY(LogPing);
