@@ -1,12 +1,12 @@
 # Ping
 
-## An Unreal Engine 4 project plugin by Descendent Studios
+## An Unreal Engine 5 project plugin by Descendent Studios
 
 ### Overview
 
-While it has robust support for computing ping to the server to which a game client is currently connected, Unreal Engine 4 does not have a natively-supported way to ping an arbitrary host, which is vital for features like server browsers.
+While it has robust support for computing ping to the server to which a game client is currently connected, Unreal Engine 5 does not have a natively-supported way to ping an arbitrary host, which is vital for features like server browsers.
 
-Ping is a plugin to do just that.  Not only does it give this functionality to any UE4 project, it also exposes all that functionality to Blueprint, making it easy for any developer to add arbitrary host-pinging to a project.  Also, Ping is compatible with Windows, Mac, and Linux builds of UE4 projects.
+Ping is a plugin to do just that.  Not only does it give this functionality to any UE5 project, it also exposes all that functionality to Blueprint, making it easy for any developer to add arbitrary host-pinging to a project.  Also, Ping is compatible with Windows, Mac, and Linux builds of UE5 projects.
 
 Ping is multi-threaded, which means your game will not block while the client is waiting for the echo.
 
@@ -14,11 +14,11 @@ Ping was created for [Descent: Underground](https://descendentstudios.com), and 
 
 ### Usage
 
-Ping will need to be built before it can be used.  Your UE4 editor *should* detect that it needs to do the build.  Otherwise, you'll need to recompile your game project.
+Ping will need to be built before it can be used.  Your UE5 editor *should* detect that it needs to do the build.  Otherwise, you'll need to recompile your game project.
 
 ![Example Blueprint](Example.png)
 
-Pinging a host is easy.  Create a PingIP object, then bind events to OnPingComplete and OnPingFailure.  Then Call SendPing() on your host, either by hostname or IPv4 address (IPv6 is not currently supported, since UE4 does server join over IPv4).
+Pinging a host is easy.  Create a PingIP object, then bind events to OnPingComplete and OnPingFailure.  Then Call SendPing() on your host, either by hostname or IPv4 address (IPv6 is not currently supported, since UE5 does server join over IPv4).
 
 That's it!  When the ping thread has completed, the event bound to OnPingComplete or OnPingFailure will be called, depending on whether an echo was received.
 
