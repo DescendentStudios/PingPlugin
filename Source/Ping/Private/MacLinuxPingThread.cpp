@@ -1,9 +1,10 @@
-#include "PingPrivatePCH.h"
-#include "HAL/Platform.h"
+
 
 #if PLATFORM_MAC | PLATFORM_LINUX
 
 #include "MacLinuxPingThread.h"
+#include "PingPrivatePCH.h"
+#include "HAL/Platform.h"
 #include "Misc/ScopeExit.h"
 #include <spawn.h> // see manpages-posix-dev
 #include <poll.h>

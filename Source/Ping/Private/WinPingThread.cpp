@@ -1,8 +1,8 @@
-#include "PingPrivatePCH.h"
-#include "HAL/Platform.h"
 
 #if PLATFORM_WINDOWS
 #include "WinPingThread.h"
+#include "PingPrivatePCH.h"
+#include "HAL/Platform.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <IntSafe.h>
 #include <winsock2.h>

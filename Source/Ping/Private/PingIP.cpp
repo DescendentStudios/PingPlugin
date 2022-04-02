@@ -1,6 +1,7 @@
+
+#include "PingIP.h"
 #include "PingPrivatePCH.h"
 #include "HAL/Platform.h"
-#include "PingIP.h"
 
 #if PLATFORM_WINDOWS
 #include "WinPingThread.h"

@@ -1,5 +1,6 @@
 // Copyright 1998-2015 Epic Games, Inc. All Rights Reserved.
 
+#include "Ping.h"
 #include "PingPrivatePCH.h"
 #include "Core.h"
 #include "Modules/ModuleManager.h"
